@@ -1,0 +1,8 @@
+server_port: 9011
+database_url: mariadb://localhost:3306/middle_data
+database_username: root
+database_password: 369
+redis_url: 43.134.32.208:6379
+redis_username:
+redis_password: jhkdjhkjdhsIUTYURTU_sCDs5d
+redis_expire: 7200
