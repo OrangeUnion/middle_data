@@ -26,6 +26,8 @@ pub async fn get_users(result_param: RecordParam, league: League) -> ResMessage<
             user
         }
         None => {
+            /// # 需要查各盟接口
+            /// * 查询返回状态、联盟标识
             insert(&other_clan_tag, result_param.other_name, league.id, is_global).await.unwrap_or(User::default())
         }
     };
