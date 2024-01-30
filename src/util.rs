@@ -1,6 +1,6 @@
 use chrono::{Local, NaiveDateTime};
 use jsonwebtoken::{encode, EncodingKey, Header};
-use rand::{random, Rng};
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 use tokio::{fs::File, io::AsyncReadExt};
 use crate::log_info;
@@ -49,4 +49,18 @@ pub fn new_token(league_code: &str) -> String {
 
 pub fn now_time() -> NaiveDateTime {
     Local::now().naive_local()
+}
+
+/// # 兼容格式化时间
+pub fn format_time(time: &str) -> NaiveDateTime {
+    let fmt_vec = vec!["%Y-%m-%d %H:%M:%S", "%Y-%m-%dT%H:%M:%S", "%Y-%m-%d %H:%M", "%Y-%m-%dT%H:%M"];
+    for fmt in fmt_vec {
+        match NaiveDateTime::parse_from_str(&time, fmt) {
+            Ok(res_time) => {
+                return res_time;
+            }
+            Err(_) => { continue; }
+        }
+    }
+    NaiveDateTime::default()
 }

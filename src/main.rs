@@ -3,8 +3,10 @@ use axum::{Json, Router};
 use axum::extract::Path;
 use axum::routing::{get, post};
 use tower_http::cors::CorsLayer;
-use crate::api::result;
-use crate::api::result::ResultParam;
+use crate::api::{MiddleResponse, record, ResMessage, reverse, round};
+use crate::api::record::RecordParam;
+use crate::api::reverse::ReverseParam;
+use crate::api::round::RoundParam;
 
 mod log;
 mod util;
@@ -13,16 +15,43 @@ mod model;
 
 /// # 获取对战结果
 /// * 传入双方标签
-async fn get_result(Json(res): Json<ResultParam>) -> impl IntoResponse {
-    let g = result::get(res).await;
-    let v = api::MiddleResponse::success(result::Result::default());
-    Json(g)
+async fn get_result(Json(res): Json<RecordParam>) -> Result<impl IntoResponse, impl IntoResponse> {
+    let json = match record::get(res).await {
+        ResMessage::Success(re) => {
+            let json = Json(MiddleResponse::success(re));
+            log_info!("对战 {:?}",json);
+            Ok(json)
+        }
+        ResMessage::Failed(err) => {
+            let json = Json(MiddleResponse::error(err));
+            return Err(json);
+        }
+    };
+    json
 }
 
 /// # 逆转处理
-/// * 传入轮次，任意一方标签
-async fn reverse_result() {
-    //
+/// * 传入round_id，任意一方tag, 是否国际服(默认false)
+async fn reverse_result(Json(res): Json<ReverseParam>) -> Result<impl IntoResponse, impl IntoResponse> {
+    let json = match reverse::set(res).await {
+        ResMessage::Success(re) => {
+            let json = Json(MiddleResponse::success(re));
+            log_info!("逆转 {:?}",json);
+            Ok(json)
+        }
+        ResMessage::Failed(err) => {
+            let json = Json(MiddleResponse::error(err));
+            return Err(json);
+        }
+    };
+    json
+}
+
+/// # 开启轮次
+/// * 传入time
+async fn create_round(Json(res): Json<RoundParam>) -> impl IntoResponse {
+    let data = round::create_round(res).await;
+    Json(data)
 }
 
 async fn get_key(Path(code): Path<String>) -> impl IntoResponse {
@@ -38,6 +67,7 @@ async fn main() {
         .route("/", get(|| async { Html("<h1>Middle Data</h1>") }))
         .route("/get_result", post(get_result))
         .route("/reverse_result", post(reverse_result))
+        .route("/create_round", post(create_round))
         .route("/get_key/:code", get(get_key))
         .layer(CorsLayer::permissive());
     let listener = tokio::net::TcpListener::bind(address).await.unwrap();

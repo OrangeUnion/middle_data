@@ -1,11 +1,9 @@
 use std::str::FromStr;
-use serde::{Deserialize, Serialize};
-use serde::de::DeserializeOwned;
-use sqlx::{ConnectOptions, MySql, Pool};
+use sqlx::{MySql, Pool};
 use sqlx::mysql::MySqlConnectOptions;
 use crate::util::Config;
 
-pub mod result;
+pub mod record;
 pub mod reverse;
 pub mod league;
 pub mod round;
