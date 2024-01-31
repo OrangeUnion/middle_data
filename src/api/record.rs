@@ -54,10 +54,10 @@ pub struct RecordParam {
 }
 
 /// # 获取对战入口
-pub async fn get(result_param: RecordParam) -> ResMessage<RecordApi, &'static str> {
+pub async fn get(result_param: RecordParam) -> ResMessage<RecordApi, String> {
     // 验证token
-    let Some(api_key) = &result_param.api_key else { return Failed("无联盟信息"); };
-    let Some(league) = league::select_by_key(api_key).await else { return Failed("非法接入"); };
+    let Some(api_key) = &result_param.api_key else { return Failed("无联盟信息".to_string()); };
+    let Some(league) = league::select_by_key(api_key).await else { return Failed("非法接入".to_string()); };
 
     let res_info = match save_record(result_param, league).await {
         Success(re) => { re }
@@ -101,7 +101,7 @@ pub async fn get(result_param: RecordParam) -> ResMessage<RecordApi, &'static st
     Success(result)
 }
 
-async fn save_record(result_param: RecordParam, league: League) -> ResMessage<ResInfo, &'static str> {
+async fn save_record(result_param: RecordParam, league: League) -> ResMessage<ResInfo, String> {
     // 获取两边用户信息
     let users = get_users(result_param, league).await;
     let (this, other) = match users {
