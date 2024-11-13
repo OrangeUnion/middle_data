@@ -51,6 +51,8 @@ pub async fn get_users(result_param: RecordParam, league: League) -> ResMessage<
     Success((this, other))
 }
 
+type LeagueJsons = Vec<LeagueJson>;
+
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
 struct LeagueJson {
     tag: String,
@@ -72,12 +74,10 @@ fn union_to_league(union: &str) -> i64 {
 
 async fn check_state(mut tag: &str) -> ResMessage<LeagueJson, String> {
     tag = tag.trim_start_matches("#");
-    let om = get_om_api(tag).await;
-    let bz = get_bz_api(tag).await;
-    let gm = get_gm_api(tag).await;
+    let league_jsons = get_league_jsons(tag).await;
 
-    let mut league = om.clone();
-    for lea in vec![&om, &bz, &gm] {
+    let mut league = LeagueJson::default();
+    for lea in league_jsons {
         if !lea.tag.eq(&format!("#{tag}")) || !lea.state.to_lowercase().eq("ok") || lea.tag.len() < 3 {
             continue;
         }
@@ -93,16 +93,18 @@ async fn check_state(mut tag: &str) -> ResMessage<LeagueJson, String> {
     Success(league)
 }
 
-async fn get_om_api(tag: &str) -> LeagueJson {
-    LeagueJson::default()
+async fn get_league_jsons(tag: &str) -> LeagueJsons {
+    // let om_url = format!("http://www.coc-hs.cn/tag/{tag}");
+    let bz_url = format!("http://cocbzlm.com:8422/tag/{tag}");
+    let gm_url = format!("http://www.coc-hs.cn/tag/{tag}");
+    let mut league_jsons = LeagueJsons::new();
+    for url in vec![bz_url,gm_url] {
+        league_jsons.push(get_client(url).await)
+    }
+    league_jsons
 }
 
-async fn get_bz_api(tag: &str) -> LeagueJson {
-    LeagueJson::default()
-}
-
-async fn get_gm_api(tag: &str) -> LeagueJson {
-    let url = format!("http://www.coc-hs.cn/tag/{tag}");
+async fn get_client(url:String) -> LeagueJson {
     let response = Client::new().get(url).send().await;
     match response {
         Ok(re) => {
