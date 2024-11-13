@@ -4,7 +4,7 @@ use crate::api::{ResMessage, round};
 use crate::api::league::get_leagues;
 use crate::api::ResMessage::*;
 use crate::api::user::get_users;
-use crate::log_info;
+use void_log::log_info;
 use crate::model::{league, user};
 use crate::model::league::League;
 use crate::model::record::*;

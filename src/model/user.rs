@@ -1,7 +1,8 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
-use crate::{log_info, log_warn, util};
-use crate::model::get_conn;
+use void_log::{log_info, log_warn};
+use crate::{model::get_conn, util};
+use crate::api::user::LeagueJsonUnion;
 
 /// # User 数据库映射
 #[derive(Clone, Default, Debug, Serialize, Deserialize, sqlx::FromRow)]
@@ -11,7 +12,7 @@ pub struct User {
     pub name: Option<String>,
     pub score: i64,
     pub reverse_count: i64,
-    pub league_id: i64,
+    pub league_id: L,
     pub is_global: bool,
     pub create_time: NaiveDateTime,
     pub update_time: NaiveDateTime,
@@ -59,7 +60,7 @@ pub async fn select_by_tag(tag: &str, is_national: bool) -> Option<User> {
 /// * name 名称
 /// * league 联盟Id
 /// * is_national 是否国际服
-pub async fn insert(tag: &str, name: Option<String>, league_id: i64, is_global: bool) -> Option<User> {
+pub async fn insert(tag: &str, name: Option<String>, league_id: &i64, is_global: bool) -> Option<User> {
     let now = util::now_time();
     let name = name.unwrap_or("New Clan".to_string());
     let conn = get_conn().await;

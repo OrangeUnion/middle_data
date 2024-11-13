@@ -1,7 +1,7 @@
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
-use crate::model::get_conn;
-use crate::{log_info, log_warn, util};
+use void_log::{log_info, log_warn};
+use crate::{model::get_conn, util};
 
 /// # Reverse 数据库映射
 #[derive(Clone, Default, Debug, Serialize, Deserialize, sqlx::FromRow)]

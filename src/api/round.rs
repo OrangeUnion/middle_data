@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use crate::log_info;
+use void_log::log_info;
 use crate::model::round::*;
 
 /// # round接口传参

@@ -1,14 +1,15 @@
-use axum::response::{Html, IntoResponse};
-use axum::{Json, Router};
-use axum::extract::Path;
-use axum::routing::{get, post};
-use tower_http::cors::CorsLayer;
-use crate::api::{MiddleResponse, record, ResMessage, reverse, round};
 use crate::api::record::RecordParam;
 use crate::api::reverse::ReverseParam;
 use crate::api::round::RoundParam;
+use crate::api::{record, reverse, round, MiddleResponse, ResMessage};
+use axum::extract::Path;
+use axum::response::{Html, IntoResponse};
+use axum::routing::{get, post};
+use axum::{Json, Router};
+use tower_http::cors::CorsLayer;
+use void_log::log_info;
 
-mod log;
+// mod log;
 mod util;
 mod api;
 mod model;
@@ -68,7 +69,7 @@ async fn main() {
         .route("/get_result", post(get_result))
         .route("/reverse_result", post(reverse_result))
         .route("/create_round", post(create_round))
-        .route("/get_key/:code", get(get_key))
+        .route("/get_key/{code}", get(get_key))
         .layer(CorsLayer::permissive());
     let listener = tokio::net::TcpListener::bind(address).await.unwrap();
     axum::serve(listener, app).await.unwrap();
