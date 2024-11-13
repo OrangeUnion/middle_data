@@ -3,7 +3,7 @@ use jsonwebtoken::{encode, EncodingKey, Header};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use tokio::{fs::File, io::AsyncReadExt};
-use crate::log_info;
+use void_log::log_info;
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
 pub struct Config {
@@ -23,7 +23,7 @@ impl Config {
         let mut yaml_file = File::open("config.yaml").await.expect("read file error");
         let mut yaml_str = String::new();
         yaml_file.read_to_string(&mut yaml_str).await.expect("read str error");
-        serde_yaml::from_str::<Config>(yaml_str.as_str()).expect("config error")
+        serde_yml::from_str::<Config>(yaml_str.as_str()).expect("config error")
     }
 }
 
@@ -36,7 +36,7 @@ struct Claims {
 pub fn new_token(league_code: &str) -> String {
     let mut rng = rand::thread_rng();
     let random_key: Vec<u8> = (0..32).map(|_| rng.gen_range(0..=255)).collect();
-    log_info!("{:?}",random_key);
+    log_info!("{:?}", random_key);
 
     let claims = Claims {
         sub: format!("{league_code}@org.void"),

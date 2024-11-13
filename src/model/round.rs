@@ -1,7 +1,7 @@
+use crate::{model::get_conn, util};
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
-use crate::model::get_conn;
-use crate::{log_error, log_info, util};
+use void_log::{log_error, log_info};
 
 /// # Round 数据库映射
 #[derive(Clone, Default, Debug, Serialize, Deserialize, sqlx::FromRow)]

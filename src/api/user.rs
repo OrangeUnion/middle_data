@@ -1,10 +1,10 @@
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
-
+use sqlx::FromRow;
 use crate::api::record::RecordParam;
 use crate::api::ResMessage;
 use crate::api::ResMessage::{Failed, Success};
-use crate::log_warn;
+use void_log::log_warn;
 use crate::model::league::League;
 use crate::model::user::*;
 
@@ -21,7 +21,7 @@ pub async fn get_users(result_param: RecordParam, league: League) -> ResMessage<
             user
         }
         None => {
-            insert(&this_clan_tag, result_param.this_name, league.id, is_global).await.unwrap_or(User::default())
+            insert(&this_clan_tag, result_param.this_name, &league.id, is_global).await.unwrap_or(User::default())
         }
     };
 
@@ -31,18 +31,18 @@ pub async fn get_users(result_param: RecordParam, league: League) -> ResMessage<
             user
         }
         None => {
-            /// # 需要查各盟接口
-            /// * 查询返回状态、联盟标识
+            // # 需要查各盟接口
+            // * 查询返回状态、联盟标识
             match check_state(&other_clan_tag).await {
                 Success(re) => {
-                    let league_id = union_to_league(&re.union);
+                    let league_id = LeagueJsonUnion::num(&re.union);
                     if league_id == league.id {
                         return Failed("同联盟".to_string());
                     }
                     if re.tag.len() < 3 {
                         return Failed("匹配失败".to_string());
                     }
-                    insert(&re.tag, Some(re.name), union_to_league(&re.union), is_global).await.unwrap_or(User::default())
+                    insert(&re.tag, Some(re.name), &LeagueJsonUnion::num(&re.union), is_global).await.unwrap_or(User::default())
                 }
                 Failed(err) => { return Failed(err); }
             }
@@ -56,7 +56,28 @@ struct LeagueJson {
     tag: String,
     name: String,
     state: String,
-    union: String,
+    union: LeagueJsonUnion,
+}
+
+#[derive(Clone, Default, Debug, Serialize, Deserialize, FromRow)]
+#[repr(i64)]
+pub enum LeagueJsonUnion {
+    O = 1,
+    BzLm = 2,
+    G = 3,
+    #[default]
+    Other = 0,
+}
+
+impl LeagueJsonUnion {
+    fn num(&self) -> i64 {
+        match &self {
+            LeagueJsonUnion::O => { 1 }
+            LeagueJsonUnion::BzLm => { 2 }
+            LeagueJsonUnion::G => { 3 }
+            LeagueJsonUnion::Other => { 0 }
+        }
+    }
 }
 
 fn union_to_league(union: &str) -> i64 {
@@ -82,7 +103,7 @@ async fn check_state(mut tag: &str) -> ResMessage<LeagueJson, String> {
             continue;
         }
         if lea.tag.eq(&league.tag) {
-            let str = format!("{}和{}标签重复", league.union, lea.union);
+            let str = format!("{:?}和{:?}标签重复", league.union, lea.union);
 
             return Failed(str);
         }
@@ -106,8 +127,7 @@ async fn get_gm_api(tag: &str) -> LeagueJson {
     let response = Client::new().get(url).send().await;
     match response {
         Ok(re) => {
-            let json = re.json::<LeagueJson>().await.expect("格式不对");
-            json
+            re.json::<LeagueJson>().await.expect("格式不对")
         }
         Err(err) => {
             log_warn!("{err}");
