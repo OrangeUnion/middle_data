@@ -1,8 +1,7 @@
+use crate::{model::get_conn, util};
 use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 use void_log::{log_info, log_warn};
-use crate::{model::get_conn, util};
-use crate::api::user::LeagueJsonUnion;
 
 /// # User 数据库映射
 #[derive(Clone, Default, Debug, Serialize, Deserialize, sqlx::FromRow)]
@@ -12,7 +11,7 @@ pub struct User {
     pub name: Option<String>,
     pub score: i64,
     pub reverse_count: i64,
-    pub league_id: L,
+    pub league_id: i64,
     pub is_global: bool,
     pub create_time: NaiveDateTime,
     pub update_time: NaiveDateTime,

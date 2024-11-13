@@ -1,12 +1,11 @@
-use reqwest::Client;
-use serde::{Deserialize, Serialize};
-use sqlx::FromRow;
 use crate::api::record::RecordParam;
 use crate::api::ResMessage;
 use crate::api::ResMessage::{Failed, Success};
-use void_log::log_warn;
 use crate::model::league::League;
 use crate::model::user::*;
+use reqwest::Client;
+use serde::{Deserialize, Serialize};
+use void_log::log_warn;
 
 /// # 获取用户
 pub async fn get_users(result_param: RecordParam, league: League) -> ResMessage<(User, User), String> {
@@ -61,7 +60,7 @@ struct LeagueJson {
     union: LeagueJsonUnion,
 }
 
-#[derive(Clone, Default, Debug, Serialize, Deserialize, FromRow)]
+#[derive(Clone, Default, Debug, Serialize, Deserialize)]
 #[repr(i64)]
 pub enum LeagueJsonUnion {
     O = 1,
@@ -79,17 +78,6 @@ impl LeagueJsonUnion {
             LeagueJsonUnion::G => { 3 }
             LeagueJsonUnion::Other => { 0 }
         }
-    }
-}
-
-fn union_to_league(union: &str) -> i64 {
-    let binding = union.to_lowercase();
-    let union = binding.as_str();
-    match union {
-        "o" => 1,
-        "bzlm" => 2,
-        "g" => 3,
-        _ => 0
     }
 }
 
