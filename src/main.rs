@@ -6,6 +6,9 @@ use axum::extract::Path;
 use axum::response::{Html, IntoResponse};
 use axum::routing::{get, post};
 use axum::{Json, Router};
+use axum_server::tls_rustls::RustlsConfig;
+use std::net::SocketAddr;
+use std::str::FromStr;
 use tower_http::cors::CorsLayer;
 use void_log::log_info;
 
@@ -74,6 +77,10 @@ async fn main() {
         .route("/create_round", post(create_round)) // 发布时间
         .route("/get_key/{code}", get(get_key))
         .layer(CorsLayer::permissive());
-    let listener = tokio::net::TcpListener::bind(address).await.unwrap();
-    axum::serve(listener, app).await.unwrap();
+
+    let config = RustlsConfig::from_pem_file("PEM/cert.pem", "PEM/key.pem").await.unwrap();
+    // let listener = tokio::net::TcpListener::bind(address).await.unwrap();
+    let addr = SocketAddr::from_str(&address).unwrap();
+    axum_server::bind_rustls(addr, config).serve(app.into_make_service()).await.unwrap();
+    // axum::serve(listener, app).await.unwrap();
 }

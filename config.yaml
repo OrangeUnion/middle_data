@@ -1,5 +1,4 @@
 server:
-  path: 0.0.0.0
   port: 9011
 database:
   url: mariadb://localhost:3306/middle_data
