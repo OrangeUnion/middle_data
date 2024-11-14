@@ -11,6 +11,7 @@ use std::net::SocketAddr;
 use std::str::FromStr;
 use tower_http::cors::CorsLayer;
 use void_log::log_info;
+use crate::util::Config;
 
 // mod log;
 mod util;
@@ -64,10 +65,10 @@ async fn get_key(Path(code): Path<String>) -> impl IntoResponse {
 
 #[tokio::main]
 async fn main() {
-    let address = if let Some(server) = util::Config::new().await.server {
-        format!("{}:{}", server.path.unwrap_or("0.0.0.0".to_string()), server.port.unwrap_or(9011))
+    let (address, tls) = if let Some(server) = Config::new().await.server {
+        (format!("{}:{}", server.path.unwrap_or("0.0.0.0".to_string()), server.port.unwrap_or(9011)), server.tls.unwrap_or_default())
     } else {
-        "0.0.0.0:9011".to_string()
+        ("0.0.0.0:9011".to_string(), false)
     };
     log_info!("启动参数: {address}");
     let app = Router::new()
@@ -78,9 +79,15 @@ async fn main() {
         .route("/get_key/{code}", get(get_key))
         .layer(CorsLayer::permissive());
 
-    let config = RustlsConfig::from_pem_file("PEM/cert.pem", "PEM/key.pem").await.unwrap();
-    // let listener = tokio::net::TcpListener::bind(address).await.unwrap();
-    let addr = SocketAddr::from_str(&address).unwrap();
-    axum_server::bind_rustls(addr, config).serve(app.into_make_service()).await.unwrap();
-    // axum::serve(listener, app).await.unwrap();
+    // 是否启用tls
+    if tls {
+        log_info!("启用tls");
+        let config = RustlsConfig::from_pem_file("PEM/cert.pem", "PEM/key.pem").await.unwrap();
+        let addr = SocketAddr::from_str(&address).unwrap();
+        axum_server::bind_rustls(addr, config).serve(app.into_make_service()).await.unwrap();
+    } else {
+        log_info!("关闭tls");
+        let listener = tokio::net::TcpListener::bind(address).await.unwrap();
+        axum::serve(listener, app).await.unwrap();
+    }
 }

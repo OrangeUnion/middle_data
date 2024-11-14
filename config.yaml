@@ -1,5 +1,6 @@
 server:
   port: 9011
+  tls: true
 database:
   url: mariadb://localhost:3306/middle_data
   username: root

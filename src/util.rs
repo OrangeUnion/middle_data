@@ -16,11 +16,12 @@ pub struct Config {
 pub struct ConfigServer {
     pub path: Option<String>,
     pub port: Option<i64>,
+    pub tls: Option<bool>,
 }
 
 impl Default for ConfigServer {
     fn default() -> Self {
-        Self { path: Some("0.0.0.0".to_string()), port: Some(9011) }
+        Self { path: Some("0.0.0.0".to_string()), port: Some(9011), tls: Some(false) }
     }
 }
 
