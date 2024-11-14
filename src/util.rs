@@ -7,15 +7,37 @@ use void_log::log_info;
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize)]
 pub struct Config {
-    pub server_port: Option<i64>,
-    pub database_url: Option<String>,
-    pub database_name: Option<String>,
-    pub database_username: Option<String>,
-    pub database_password: Option<String>,
-    pub redis_url: String,
-    pub redis_username: String,
-    pub redis_password: String,
-    pub redis_expire: i64,
+    pub server: Option<ConfigServer>,
+    pub database: Option<ConfigDatabase>,
+    pub redis: Option<ConfigRedis>,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct ConfigServer {
+    pub path: Option<String>,
+    pub port: Option<i64>,
+}
+
+impl Default for ConfigServer {
+    fn default() -> Self {
+        Self { path: Some("0.0.0.0".to_string()), port: Some(9011) }
+    }
+}
+
+#[derive(Clone, Default, Debug, Serialize, Deserialize)]
+pub struct ConfigDatabase {
+    pub url: Option<String>,
+    pub name: Option<String>,
+    pub username: Option<String>,
+    pub password: Option<String>,
+}
+
+#[derive(Clone, Default, Debug, Serialize, Deserialize)]
+pub struct ConfigRedis {
+    pub url: String,
+    pub username: String,
+    pub password: String,
+    pub expire: i64,
 }
 
 impl Config {

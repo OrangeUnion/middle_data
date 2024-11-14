@@ -61,14 +61,17 @@ async fn get_key(Path(code): Path<String>) -> impl IntoResponse {
 
 #[tokio::main]
 async fn main() {
-    let Some(port) = util::Config::new().await.server_port else { panic!("config port not fount") };
-    let address = format!("0.0.0.0:{}", port);
+    let address = if let Some(server) = util::Config::new().await.server {
+        format!("{}:{}", server.path.unwrap_or("0.0.0.0".to_string()), server.port.unwrap_or(9011))
+    } else {
+        "0.0.0.0:9011".to_string()
+    };
     log_info!("启动参数: {address}");
     let app = Router::new()
         .route("/", get(|| async { Html("<h1>Middle Data</h1>") }))
-        .route("/get_result", post(get_result))
-        .route("/reverse_result", post(reverse_result))
-        .route("/create_round", post(create_round))
+        .route("/get_result", post(get_result)) // 对战登记
+        .route("/reverse_result", post(reverse_result)) // 逆转
+        .route("/create_round", post(create_round)) // 发布时间
         .route("/get_key/{code}", get(get_key))
         .layer(CorsLayer::permissive());
     let listener = tokio::net::TcpListener::bind(address).await.unwrap();
