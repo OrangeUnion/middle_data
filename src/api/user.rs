@@ -5,6 +5,7 @@ use crate::model::league::League;
 use crate::model::user::*;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
+use sqlx::Type;
 use void_log::log_warn;
 
 /// # 获取用户
@@ -60,7 +61,7 @@ struct LeagueJson {
     union: LeagueJsonUnion,
 }
 
-#[derive(Clone, Default, Debug, Serialize, Deserialize)]
+#[derive(Clone, Default, Debug, Serialize, Deserialize, Type)]
 #[repr(i64)]
 pub enum LeagueJsonUnion {
     O = 1,
@@ -68,6 +69,21 @@ pub enum LeagueJsonUnion {
     G = 3,
     #[default]
     Other = 0,
+}
+
+impl LeagueJson {
+    async fn get_client(url: String) -> LeagueJson {
+        let response = Client::new().get(url).send().await;
+        match response {
+            Ok(re) => {
+                re.json::<LeagueJson>().await.expect("格式不对")
+            }
+            Err(err) => {
+                log_warn!("{err}");
+                LeagueJson::default()
+            }
+        }
+    }
 }
 
 impl LeagueJsonUnion {
@@ -103,25 +119,12 @@ async fn check_state(mut tag: &str) -> ResMessage<LeagueJson, String> {
 }
 
 async fn get_league_jsons(tag: &str) -> LeagueJsons {
-    // let om_url = format!("http://www.coc-hs.cn/tag/{tag}");
+    // let om_url = format!("http://www.omcoc.club/tag/{tag}/?format=json");
     let bz_url = format!("http://cocbzlm.com:8422/tag/{tag}");
     let gm_url = format!("http://www.coc-hs.cn/tag/{tag}");
     let mut league_jsons = LeagueJsons::new();
-    for url in vec![bz_url,gm_url] {
-        league_jsons.push(get_client(url).await)
+    for url in vec![bz_url, gm_url] {
+        league_jsons.push(LeagueJson::get_client(url).await)
     }
     league_jsons
-}
-
-async fn get_client(url:String) -> LeagueJson {
-    let response = Client::new().get(url).send().await;
-    match response {
-        Ok(re) => {
-            re.json::<LeagueJson>().await.expect("格式不对")
-        }
-        Err(err) => {
-            log_warn!("{err}");
-            LeagueJson::default()
-        }
-    }
 }
