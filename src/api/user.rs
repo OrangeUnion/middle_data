@@ -63,6 +63,7 @@ struct LeagueJson {
 
 #[derive(Clone, Default, Debug, Serialize, Deserialize, Type)]
 #[repr(i64)]
+#[serde(rename_all = "lowercase")]
 pub enum LeagueJsonUnion {
     O = 1,
     BzLm = 2,
